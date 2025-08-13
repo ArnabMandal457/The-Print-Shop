@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>College Print Portal</title>
+<style>
+  :root{
+    --bg1:#0f172a; /* slate-900 */
+    --bg2:#1e293b; /* slate-800 */
+    --pri:#4f46e5; /* indigo-600 */
+    --pri-2:#22d3ee; /* cyan-400 */
+    --txt:#e5e7eb; /* slate-200 */
+    --muted:#94a3b8; /* slate-400 */
+    --glass: rgba(255,255,255,.08);
+    --glass-border: rgba(255,255,255,.18);
+    --header-h: 72px;
+  }
+  *{box-sizing: border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    color:var(--txt);
+    background: radial-gradient(1200px 800px at 10% -10%, rgba(79,70,229,.35), transparent),
+                radial-gradient(1000px 700px at 120% 10%, rgba(34,211,238,.25), transparent),
+                linear-gradient(135deg, var(--bg1), var(--bg2));
+    overflow-x:hidden;
+  }
+
+  /* Floating decorative blobs */
+  .bg-blob{position:fixed; filter: blur(40px); opacity:.25; pointer-events:none; z-index:0}
+  .b1{width:340px; height:340px; background:#6366f1; top:-60px; left:-60px; border-radius:50%; animation: float 10s ease-in-out infinite}
+  .b2{width:420px; height:420px; background:#22d3ee; bottom:-120px; right:-80px; border-radius:50%; animation: float 14s ease-in-out infinite reverse}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(18px)}}
+
+  /* Header */
+  header{
+    position:sticky; top:0; z-index:10;
+    height:var(--header-h);
+    backdrop-filter: blur(10px);
+    background: linear-gradient(to right, rgba(15,23,42,.65), rgba(30,41,59,.35));
+    border-bottom:1px solid var(--glass-border);
+  }
+  .container{width:min(1100px, 92%); margin:0 auto}
+  .header-inner{height:var(--header-h); display:flex; align-items:center; gap:14px}
+  .logo{height:44px; width:44px; border-radius:12px; object-fit:cover; background:#111827; border:1px solid var(--glass-border)}
+  .brand{font-weight:700; letter-spacing:.2px}
+
+  /* Hero layout */
+  main{
+    position:relative; z-index:1; /* above blobs */
+  }
+  .hero{display:grid; grid-template-columns: 1.2fr .9fr; gap:36px; align-items:center; min-height:calc(100vh - var(--header-h)); padding:32px 0}
+  @media (max-width: 900px){
+    .hero{grid-template-columns: 1fr; gap:22px; padding:18px 0}
+  }
+
+  .info{
+    align-self:center;
+  }
+  .eyebrow{display:inline-block; padding:6px 10px; border-radius:999px; background:var(--glass); border:1px solid var(--glass-border); font-size:.82rem; color:var(--muted)}
+  h1{margin:12px 0 10px; font-size:clamp(1.6rem, 3.8vw, 2.4rem); line-height:1.15}
+  .sub{color:var(--muted); max-width:52ch}
+  .bullets{margin:18px 0 0; padding:0; list-style:none; display:grid; gap:10px}
+  .bullets li{display:flex; align-items:flex-start; gap:10px}
+  .check{flex:0 0 22px; height:22px; border-radius:6px; background:linear-gradient(135deg, var(--pri), var(--pri-2)); display:grid; place-items:center; font-size:14px}
+
+  /* Upload card */
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+    border:1px solid var(--glass-border);
+    border-radius:22px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.35);
+    backdrop-filter: blur(16px);
+    transform-style: preserve-3d; perspective: 1000px;
+    transition: transform .2s ease;
+  }
+  .card:focus-within{outline:2px solid rgba(79,70,229,.5)}
+  .card-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px}
+  .card-title{font-weight:600}
+
+  /* Dropzone */
+  .dropzone{
+    display:grid; place-items:center; text-align:center; border:2px dashed rgba(229,231,235,.25);
+    border-radius:16px; padding:26px; transition: all .25s ease; position:relative; overflow:hidden;
+  }
+  .dropzone:hover{background:rgba(255,255,255,.08)}
+  .dropzone.drag{border-color:#22d3ee; box-shadow:0 0 0 4px rgba(34,211,238,.25) inset, 0 0 0 1px #22d3ee}
+  .dz-icon{font-size:30px; opacity:.9}
+  .dz-help{color:var(--muted); margin-top:6px; font-size:.95rem}
+  .accept{margin-top:10px; font-size:.8rem; color:var(--muted)}
+
+  /* Buttons */
+  .btn{appearance:none; border:none; cursor:pointer; font-weight:600; border-radius:12px; padding:12px 14px; width:100%;
+       background: linear-gradient(90deg, var(--pri), var(--pri-2)); color:white; transition: transform .15s ease, filter .2s ease}
+  .btn:hover{transform: translateY(-2px)}
+  .btn:active{transform: translateY(0)}
+  .btn.secondary{background:transparent; color:var(--txt); border:1px solid var(--glass-border)}
+  .btn-row{display:grid; grid-template-columns:1fr; gap:10px; margin-top:14px}
+  @media (min-width: 420px){ .btn-row{grid-template-columns:1fr 1fr} }
+
+  /* File pill + progress */
+  .file-pill{display:none; align-items:center; justify-content:space-between; gap:10px; border:1px solid var(--glass-border); padding:10px 12px; border-radius:12px; margin-top:14px; background:rgba(255,255,255,.06)}
+  .file-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%}
+  .change{background:none; border:none; color:#a5b4fc; cursor:pointer}
+  .progress{display:none; height:8px; background:rgba(255,255,255,.12); border-radius:999px; overflow:hidden; margin-top:10px}
+  .bar{height:100%; width:0%; background:linear-gradient(90deg, var(--pri), var(--pri-2)); transition: width .2s ease}
+
+  /* Footer */
+  footer{padding:16px 0; color:var(--muted)}
+</style>
+</head>
+<body>
+  <!-- background blobs -->
+  <div class="bg-blob b1"></div>
+  <div class="bg-blob b2"></div>
+
+  <header>
+    <div class="container header-inner">
+      <img src="the-print-shop.webp" alt="College Logo" class="logo" />
+      <div class="brand">The Print Shop</div>
+    </div>
+  </header>
+
+  <main class="container hero">
+    <!-- Left info pane -->
+    <section class="info">
+      <span class="eyebrow">India's first Automated Campus Print Service</span>
+      <h1>Upload your file and get high‑quality prints fast.</h1>
+      <p class="sub">Supported formats: PDF, DOCX, PPTX, images (JPG/PNG), and TXT. Pay securely with Razorpay after you review settings and cost.</p>
+      <ul class="bullets">
+        <li><span class="check">✓</span><span>Drag & drop from your desktop or tap to select on mobile.</span></li>
+        <li><span class="check">✓</span><span>Auto‑detect pages for pricing preview.</span></li>
+        <li><span class="check">✓</span><span>Works on Wi‑Fi LAN; Your files are not saved.</span></li>
+      </ul>
+    </section>
+
+    <!-- Right upload card -->
+    <section class="card" id="uploadCard" aria-label="File upload">
+      <div class="card-header">
+        <div class="card-title">Start a new print</div>
+        <div style="font-size:.9rem; color:var(--muted)">Step 1 of 3</div>
+      </div>
+
+      <label class="dropzone" for="fileInput" id="dropzone">
+        <div>
+          <div class="dz-icon">📄</div>
+          <div style="margin-top:6px; font-weight:600">Drop file here</div>
+          <div class="dz-help">or click to browse</div>
+          <div class="accept">Max 50 MB • PDF, DOCX, PPTX, JPG, PNG, TXT</div>
+        </div>
+      </label>
+      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.txt" />
+
+      <div class="file-pill" id="filePill">
+        <span class="file-name" id="fileName">filename.pdf</span>
+        <button class="change" id="changeBtn" type="button">Change</button>
+      </div>
+      <div class="progress" id="progress"><div class="bar" id="bar"></div></div>
+
+      <div class="btn-row">
+        <button class="btn" id="deviceBtn" type="button">Select from device</button>
+        <button class="btn secondary" id="driveBtn" type="button">Google Drive</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">Need help? Contact Print Desk • Room 102</div>
+  </footer>
+
+<script>
+  // ----- Layout polish: subtle 3D tilt on the card -----
+  const card = document.getElementById('uploadCard');
+  card.addEventListener('mousemove', (e)=>{
+    const r = card.getBoundingClientRect();
+    const cx = e.clientX - r.left; const cy = e.clientY - r.top;
+    const rx = ((cy / r.height) - 0.5) * -6; // tilt X
+    const ry = ((cx / r.width) - 0.5) *  8; // tilt Y
+    card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+  });
+  card.addEventListener('mouseleave', ()=>{ card.style.transform = 'rotateX(0) rotateY(0)'; });
+
+  // ----- Upload interactions -----
+  const dz = document.getElementById('dropzone');
+  const input = document.getElementById('fileInput');
+  const filePill = document.getElementById('filePill');
+  const fileName = document.getElementById('fileName');
+  const progress = document.getElementById('progress');
+  const bar = document.getElementById('bar');
+
+  const deviceBtn = document.getElementById('deviceBtn');
+  const driveBtn = document.getElementById('driveBtn');
+  const changeBtn = document.getElementById('changeBtn');
+
+  // Click helpers
+  deviceBtn.addEventListener('click', ()=> input.click());
+  dz.addEventListener('click', ()=> input.click());
+  changeBtn.addEventListener('click', ()=> input.click());
+
+  // Drag & drop visuals
+  ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, (e)=>{e.preventDefault(); dz.classList.add('drag')}));
+  ;['dragleave','drop'].forEach(evt => dz.addEventListener(evt, (e)=>{e.preventDefault(); dz.classList.remove('drag')}));
+
+  dz.addEventListener('drop', (e)=>{
+    if(e.dataTransfer?.files?.length){
+      input.files = e.dataTransfer.files;
+      handleFile(input.files[0]);
+    }
+  });
+
+  input.addEventListener('change', ()=>{
+    if(input.files && input.files[0]) handleFile(input.files[0]);
+  });
+
+  function handleFile(file){
+    fileName.textContent = file.name;
+    filePill.style.display = 'flex';
+    // Fake progress to make UX feel alive (replace with real upload later)
+    progress.style.display = 'block';
+    bar.style.width = '0%';
+    let p=0; const tick = setInterval(()=>{ p += Math.random()*18; if(p>=100){p=100; clearInterval(tick);} bar.style.width = p+'%'; }, 180);
+  }
+
+  // Placeholder for Drive integration
+  driveBtn.addEventListener('click', ()=>{
+    alert('Google Drive integration coming soon.');
+  });
+</script>
+</body>
+</html>
